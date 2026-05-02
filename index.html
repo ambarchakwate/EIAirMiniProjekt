@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Air Quality</title>
+
+
+    <link rel="preconnect"
+        href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin>
+
+
+    <link href=
+"https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap"
+        rel="stylesheet">
+
+
+    <link rel="stylesheet"
+        href="style.css">
+
+</head>
+
+<body>
+
+
+<div class="layout">
+
+
+    <aside class="sidebar">
+
+        <h2 id="sidebarTitle"></h2>
+
+        <button>
+            Home
+        </button>
+
+
+        <button onclick="goDashboard()">
+            Dashboard
+        </button>
+
+
+        <button onclick="goReport()">
+            Report
+        </button>
+
+    </aside>
+
+
+
+    <main class="main">
+
+
+        <div class="topbar">
+
+            <button onclick="setLang('en')">
+                EN
+            </button>
+
+            <button onclick="setLang('hi')">
+                HI
+            </button>
+
+            <button onclick="setLang('mr')">
+                MR
+            </button>
+
+            <button onclick="setLang('de')">
+                DE
+            </button>
+
+        </div>
+
+
+
+        <div class="content">
+
+
+            <h1 id="title"></h1>
+
+
+            <input id="city">
+
+
+            <div>
+
+                <button id="searchBtn"></button>
+
+                <button id="locBtn"></button>
+
+            </div>
+
+
+            <div id="result"></div>
+
+
+        </div>
+
+    </main>
+
+
+</div>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
