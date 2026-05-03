@@ -38,19 +38,17 @@
 
         <h2 id="sidebarTitle"></h2>
 
-        <button>
-            Home
-        </button>
+        <button id="navHome">
+    Home
+</button>
 
+<button id="navDash" onclick="goDashboard()">
+    Dashboard
+</button>
 
-        <button onclick="goDashboard()">
-            Dashboard
-        </button>
-
-
-        <button onclick="goReport()">
-            Report
-        </button>
+<button id="navReport" onclick="goReport()">
+    Report
+</button>
 
     </aside>
 
@@ -87,7 +85,19 @@
             <h1 id="title"></h1>
 
 
-            <input id="city">
+            <div style="position:relative; width:300px; margin:auto;">
+    
+   <div style="position:relative; width:300px; margin:auto;">
+    
+    <input id="city" style="width:100%; padding:10px;">
+
+    <div id="suggestions"></div>
+
+</div>
+
+    <div id="suggestions" class="suggestions-box"></div>
+
+</div>
 
 
             <div>
