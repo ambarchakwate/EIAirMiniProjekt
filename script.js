@@ -310,30 +310,30 @@ function getAQILevel(aqi){
     if(aqi <= 50)
         return {
             text:"Good",
-            color:"#2ecc71"
+            className:"aqi-good"
         };
 
     if(aqi <= 100)
         return {
             text:"Moderate",
-            color:"#f1c40f"
+            className:"aqi-moderate"
         };
 
     if(aqi <= 150)
         return {
             text:"Unhealthy",
-            color:"#e67e22"
+            className:"aqi-unhealthy"
         };
 
     if(aqi <= 200)
         return {
             text:"Very Unhealthy",
-            color:"#e74c3c"
+            className:"aqi-very-unhealthy"
         };
 
     return {
         text:"Hazardous",
-        color:"#8e44ad"
+        className:"aqi-hazardous"
     };
 
 }
@@ -357,16 +357,19 @@ function showResult(data){
 
     byId("result").innerHTML = `
 
-        <div class="card">
+        <div class="card ${level.className}">
 
             <h2>
                 ${data.city.name}
             </h2>
 
-            <div class="aqi"
-                 style="color:${level.color};">
-
+            <div class="aqi">
                 ${data.aqi}
+            </div>
+
+            <div class="aqi-status">
+
+                ${level.text}
 
             </div>
 
