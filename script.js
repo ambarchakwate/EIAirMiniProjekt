@@ -357,20 +357,24 @@ function showResult(data){
 
     byId("result").innerHTML = `
 
-        <div class="card"
-             style="background-color:${level.color}; color:white;">
+        <div class="card">
 
             <h2>
                 ${data.city.name}
             </h2>
 
-            <div class="aqi">
+            <div class="aqi"
+                 style="color:${level.color};">
+
                 ${data.aqi}
-            </div>
 
-            <div style="font-size:18px;margin-bottom:10px;">
+                <br>
 
-                ${level.text}
+                <span style="font-size:16px;">
+
+                    ${level.text}
+
+                </span>
 
             </div>
 
@@ -385,7 +389,6 @@ function showResult(data){
     `;
 
 }
-
 
 /* HISTORY */
 
