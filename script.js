@@ -1,6 +1,3 @@
-const TOKEN = "10125e979cb5b6f41288d714e1a6a7552ba92b76";
-
-
 let lang =
 localStorage.getItem("lang") || "en";
 
@@ -94,6 +91,99 @@ function byId(id){
 
 
 
+function getLabel(key){
+
+    return text[lang][key];
+
+}
+
+
+
+function setLang(l){
+
+    lang = l;
+
+
+    localStorage.setItem(
+        "lang",
+        l
+    );
+
+
+    location.reload();
+
+}
+
+
+
+function applyLang(){
+
+    const t =
+    text[lang];
+
+
+    if(byId("sidebarTitle"))
+        byId("sidebarTitle")
+        .innerText =
+        t.sidebarTitle;
+
+
+    if(byId("title"))
+        byId("title")
+        .innerText =
+        t.title;
+
+
+    if(byId("navHome"))
+        byId("navHome")
+        .innerText =
+        t.home;
+
+
+    if(byId("navDash"))
+        byId("navDash")
+        .innerText =
+        t.dashboard;
+
+
+    if(byId("navReport"))
+        byId("navReport")
+        .innerText =
+        t.report;
+
+
+    if(byId("city"))
+        byId("city")
+        .placeholder =
+        t.city;
+
+
+    if(byId("searchBtn"))
+        byId("searchBtn")
+        .innerText =
+        t.search;
+
+
+    if(byId("locBtn"))
+        byId("locBtn")
+        .innerText =
+        t.location;
+
+
+    const downloadBtn =
+    document.querySelector(
+        ".download-btn"
+    );
+
+
+    if(downloadBtn)
+        downloadBtn.innerText =
+        t.download;
+
+}
+
+
+
 function calculateAQI(pm25){
 
     let aqi = 0;
@@ -128,100 +218,6 @@ function calculateAQI(pm25){
 
 
     return Math.round(aqi);
-
-}
-
-
-
-function setLang(l){
-
-    lang = l;
-
-
-    localStorage.setItem(
-        "lang",
-        l
-    );
-
-
-    location.reload();
-
-}
-
-
-
-function applyLang(){
-
-    const t =
-    text[lang];
-
-
-
-    if(byId("sidebarTitle"))
-        byId("sidebarTitle")
-        .innerText =
-        t.sidebarTitle;
-
-
-
-    if(byId("title"))
-        byId("title")
-        .innerText =
-        t.title;
-
-
-
-    if(byId("navHome"))
-        byId("navHome")
-        .innerText =
-        t.home;
-
-
-
-    if(byId("navDash"))
-        byId("navDash")
-        .innerText =
-        t.dashboard;
-
-
-
-    if(byId("navReport"))
-        byId("navReport")
-        .innerText =
-        t.report;
-
-
-
-    if(byId("city"))
-        byId("city")
-        .placeholder =
-        t.city;
-
-
-
-    if(byId("searchBtn"))
-        byId("searchBtn")
-        .innerText =
-        t.search;
-
-
-
-    if(byId("locBtn"))
-        byId("locBtn")
-        .innerText =
-        t.location;
-
-
-
-    const downloadBtn =
-    document.querySelector(
-        ".download-btn"
-    );
-
-
-    if(downloadBtn)
-        downloadBtn.innerText =
-        t.download;
 
 }
 
@@ -267,54 +263,22 @@ async function searchCity(){
     geoData.results[0];
 
 
-    const lat =
-    place.latitude;
+    loadAQI(
 
+        place.latitude,
+        place.longitude,
 
-    const lon =
-    place.longitude;
+        [
 
+            place.name,
+            place.admin1,
+            place.country
 
-    const aq =
-    await fetch(
-
-`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5`
+        ]
+        .filter(Boolean)
+        .join(", ")
 
     );
-
-
-    const aqData =
-    await aq.json();
-
-
-    const pm25 =
-    aqData.hourly.pm2_5[0];
-
-
-    const aqi =
-    calculateAQI(pm25);
-
-
-    const fullName = [
-
-        place.name,
-        place.admin1,
-        place.country
-
-    ]
-    .filter(Boolean)
-    .join(", ");
-
-
-    showResult({
-
-        city:{
-            name:fullName
-        },
-
-        aqi:aqi
-
-    });
 
 }
 
@@ -326,90 +290,80 @@ function getLocation(){
 
     navigator.geolocation.getCurrentPosition(
 
-        async pos=>{
+        pos=>{
 
-            const lat =
-            pos.coords.latitude;
+            loadAQI(
 
+                pos.coords.latitude,
+                pos.coords.longitude,
 
-            const lon =
-            pos.coords.longitude;
-
-
-            let locationName =
-            "Current Location";
-
-
-            const geo =
-            await fetch(
-
-`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+                "Current Location"
 
             );
-
-
-            const geoData =
-            await geo.json();
-
-
-            if(
-                geoData.address
-            ){
-
-                const a =
-                geoData.address;
-
-
-                locationName = [
-
-                    a.city ||
-                    a.town ||
-                    a.village,
-
-                    a.state,
-
-                    a.country
-
-                ]
-                .filter(Boolean)
-                .join(", ");
-
-            }
-
-
-            const aq =
-            await fetch(
-
-`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5`
-
-            );
-
-
-            const aqData =
-            await aq.json();
-
-
-            const pm25 =
-            aqData.hourly.pm2_5[0];
-
-
-            const aqi =
-            calculateAQI(pm25);
-
-
-            showResult({
-
-                city:{
-                    name:locationName
-                },
-
-                aqi:aqi
-
-            });
 
         }
 
     );
+
+}
+
+
+
+/* LOAD AQI */
+
+async function loadAQI(
+    lat,
+    lon,
+    cityName
+){
+
+    const res =
+    await fetch(
+
+`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5,temperature_2m,relative_humidity_2m,windspeed_10m`
+
+    );
+
+
+    const data =
+    await res.json();
+
+
+    const pm25 =
+    data.hourly.pm2_5[0];
+
+
+    const aqi =
+    calculateAQI(pm25);
+
+
+    const temp =
+    data.hourly.temperature_2m[0];
+
+
+    const humidity =
+    data.hourly.relative_humidity_2m[0];
+
+
+    const wind =
+    data.hourly.windspeed_10m[0];
+
+
+    showResult({
+
+        city:{
+            name:cityName
+        },
+
+        aqi,
+
+        temp,
+
+        humidity,
+
+        wind
+
+    });
 
 }
 
@@ -431,26 +385,156 @@ function showResult(data){
     byId("result")
     .innerHTML = `
 
-        <div class="card">
+        <div class="aqiWeatherCard">
 
             <h2>
                 ${data.city.name}
             </h2>
 
-            <div class="aqi">
+            <h3>
+                AQI:
                 ${data.aqi}
+            </h3>
+
+
+            <div class="weatherGrid">
+
+                <div>
+
+                    ${getLabel("temp")}
+
+                    <br>
+
+                    ${data.temp}°C
+
+                </div>
+
+
+                <div>
+
+                    ${getLabel("humidity")}
+
+                    <br>
+
+                    ${data.humidity}%
+
+                </div>
+
+
+                <div>
+
+                    ${getLabel("wind")}
+
+                    <br>
+
+                    ${data.wind} km/h
+
+                </div>
+
             </div>
 
-            <button onclick="goDashboard()">
 
-                ${text[lang]
-                .openDashboard}
+            <button
+                onclick="goDashboard()">
+
+                ${getLabel(
+                    "openDashboard"
+                )}
 
             </button>
 
         </div>
 
     `;
+
+}
+
+
+
+/* SUGGESTIONS */
+
+async function fetchSuggestions(query){
+
+    const box =
+    byId("suggestions");
+
+
+    if(
+        query.length < 2
+    ){
+
+        box.innerHTML = "";
+        return;
+
+    }
+
+
+    const res =
+    await fetch(
+
+`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5`
+
+    );
+
+
+    const data =
+    await res.json();
+
+
+    box.innerHTML = "";
+
+
+    if(
+        !data.results
+    ) return;
+
+
+    data.results.forEach(
+
+        place=>{
+
+            const div =
+            document.createElement(
+                "div"
+            );
+
+
+            div.className =
+            "suggestion-item";
+
+
+            div.innerText = [
+
+                place.name,
+                place.admin1,
+                place.country
+
+            ]
+            .filter(Boolean)
+            .join(", ");
+
+
+            div.onclick =
+            ()=>{
+
+                byId("city")
+                .value =
+                place.name;
+
+
+                box.innerHTML =
+                "";
+
+            };
+
+
+            box.appendChild(
+                div
+            );
+
+        }
+
+    );
 
 }
 
@@ -537,8 +621,9 @@ function renderDashboard(){
                 datasets:[{
 
                     label:
-                    text[lang]
-                    .graph,
+                    getLabel(
+                        "graph"
+                    ),
 
 
                     data:
@@ -590,7 +675,7 @@ function renderReport(){
                 ${data.city.name}
             </h2>
 
-            ${text[lang].aqi}:
+            AQI:
             ${data.aqi}
 
         </div>
@@ -671,120 +756,21 @@ ${new Date()
 
 
 
-/* SUGGESTIONS */
-
-async function fetchSuggestions(query){
-
-    const box =
-    byId("suggestions");
-
-
-    if(
-        !box ||
-        query.length < 2
-    ){
-
-        box.innerHTML = "";
-        return;
-
-    }
-
-
-    try{
-
-        const res =
-        await fetch(
-
-`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5`
-
-        );
-
-
-        const data =
-        await res.json();
-
-
-        box.innerHTML = "";
-
-
-        if(
-            !data.results
-        ) return;
-
-
-        data.results.forEach(place=>{
-
-            const fullName = [
-
-                place.name,
-                place.admin1,
-                place.country
-
-            ]
-            .filter(Boolean)
-            .join(", ");
-
-
-            const div =
-            document.createElement(
-                "div"
-            );
-
-
-            div.className =
-            "suggestion-item";
-
-
-            div.innerText =
-            fullName;
-
-
-            div.onclick =
-            ()=>{
-
-                byId("city")
-                .value =
-                place.name;
-
-
-                box.innerHTML =
-                "";
-
-            };
-
-
-            box.appendChild(
-                div
-            );
-
-        });
-
-    }
-
-    catch(e){
-
-        console.log(
-            "Suggestions failed",
-            e
-        );
-
-    }
-
-}
-
-
-
 /* NAV */
 
 function goDashboard(){
+
     location.href =
     "dashboard.html";
+
 }
 
 
 function goReport(){
+
     location.href =
     "report.html";
+
 }
 
 
