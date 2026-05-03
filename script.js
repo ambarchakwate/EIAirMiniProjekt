@@ -370,18 +370,6 @@ function showResult(data){
 
             </div>
 
-            <div style="
-                margin-top:12px;
-                margin-bottom:16px;
-                font-size:16px;
-                font-weight:600;
-                color:${level.color};
-            ">
-
-                ${level.text}
-
-            </div>
-
             <button onclick="goDashboard()">
 
                 ${text[lang].openDashboard}
