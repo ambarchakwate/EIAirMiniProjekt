@@ -690,56 +690,85 @@ async function fetchSuggestions(query){
     }
 
 
-    const res =
-    await fetch(
+    try{
 
-`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5`
+        const res =
+        await fetch(
 
-    );
+`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5`
 
-
-    const data =
-    await res.json();
-
-
-    box.innerHTML = "";
-
-
-    data.forEach(place=>{
-
-        const div =
-        document.createElement(
-            "div"
         );
 
 
-        div.className =
-        "suggestion-item";
+        const data =
+        await res.json();
 
 
-        div.innerText =
-        place.display_name;
+        box.innerHTML = "";
 
 
-        div.onclick =
-        ()=>{
-
-            byId("city")
-            .value =
-            place.display_name;
+        if(
+            !data.results
+        ) return;
 
 
-            box.innerHTML =
-            "";
+        data.results.forEach(place=>{
 
-        };
+            const fullName = [
+
+                place.name,
+                place.admin1,
+                place.country
+
+            ]
+            .filter(Boolean)
+            .join(", ");
 
 
-        box.appendChild(
-            div
+            const div =
+            document.createElement(
+                "div"
+            );
+
+
+            div.className =
+            "suggestion-item";
+
+
+            div.innerText =
+            fullName;
+
+
+            div.onclick =
+            ()=>{
+
+                byId("city")
+                .value =
+                place.name;
+
+
+                box.innerHTML =
+                "";
+
+            };
+
+
+            box.appendChild(
+                div
+            );
+
+        });
+
+    }
+
+    catch(e){
+
+        console.log(
+            "Suggestions failed",
+            e
         );
 
-    });
+    }
 
 }
 
