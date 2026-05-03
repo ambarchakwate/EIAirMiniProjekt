@@ -82,6 +82,36 @@ const text = {
 
 };
 
+function calculateAQI(pm25){
+
+    let aqi = 0;
+
+    if(pm25 <= 12)
+        aqi = (pm25 / 12) * 50;
+
+    else if(pm25 <= 35)
+        aqi =
+        ((pm25 - 12) / 23)
+        * 50 + 50;
+
+    else if(pm25 <= 55)
+        aqi =
+        ((pm25 - 35) / 20)
+        * 50 + 100;
+
+    else if(pm25 <= 150)
+        aqi =
+        ((pm25 - 55) / 95)
+        * 50 + 150;
+
+    else
+        aqi =
+        ((pm25 - 150) / 100)
+        * 100 + 200;
+
+    return Math.round(aqi);
+
+}
 
 function byId(id){
     return document.getElementById(id);
@@ -189,29 +219,222 @@ function saveHistory(data){
 async function searchCity(){
 
     const city =
-        byId("city").value;
+        byId("city")
+        .value
+        .trim();
 
     if(!city) return;
 
-    showResult({
-        city:{name:city},
-        aqi:Math.floor(
-            Math.random()*200
-        )
-    });
+
+    try{
+
+        const geo =
+        await fetch(
+
+`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}`
+
+        );
+
+
+        const geoData =
+        await geo.json();
+
+
+        if(
+            !geoData.results ||
+            !geoData.results.length
+        ){
+
+            alert("City not found");
+            return;
+
+        }
+
+
+        const place =
+        geoData.results[0];
+
+
+        const lat =
+        place.latitude;
+
+
+        const lon =
+        place.longitude;
+
+
+        const aq =
+        await fetch(
+
+`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5`
+
+        );
+
+
+        const aqData =
+        await aq.json();
+
+
+        let pm25 = 0;
+
+
+        if(
+            aqData.hourly &&
+            aqData.hourly.pm2_5
+        ){
+
+            pm25 =
+            aqData.hourly.pm2_5[0];
+
+        }
+
+
+        const aqi =
+        calculateAQI(pm25);
+
+
+        const fullName = [
+
+            place.name,
+            place.admin1,
+            place.country
+
+        ]
+        .filter(Boolean)
+        .join(", ");
+
+
+        showResult({
+
+            city:{
+                name:fullName
+            },
+
+            aqi:aqi
+
+        });
+
+    }
+
+    catch(e){
+
+        alert(
+            "Search failed"
+        );
+
+        console.log(e);
+
+    }
+
 }
 
 
 function getLocation(){
 
-    showResult({
-        city:{
-            name:"Current Location"
-        },
-        aqi:Math.floor(
-            Math.random()*200
-        )
-    });
+    navigator.geolocation.getCurrentPosition(
+
+        async pos=>{
+
+            const lat =
+            pos.coords.latitude;
+
+
+            const lon =
+            pos.coords.longitude;
+
+
+            let locationName =
+            "Current Location";
+
+
+            try{
+
+                const geo =
+                await fetch(
+
+`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+
+                );
+
+
+                const geoData =
+                await geo.json();
+
+
+                if(
+                    geoData.address
+                ){
+
+                    const a =
+                    geoData.address;
+
+
+                    locationName = [
+
+                        a.city ||
+                        a.town ||
+                        a.village,
+
+                        a.state,
+
+                        a.country
+
+                    ]
+                    .filter(Boolean)
+                    .join(", ");
+
+                }
+
+            }
+
+            catch(e){}
+
+
+
+            const aq =
+            await fetch(
+
+`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5`
+
+            );
+
+
+            const aqData =
+            await aq.json();
+
+
+            let pm25 = 0;
+
+
+            if(
+                aqData.hourly &&
+                aqData.hourly.pm2_5
+            ){
+
+                pm25 =
+                aqData.hourly.pm2_5[0];
+
+            }
+
+
+            const aqi =
+            calculateAQI(pm25);
+
+
+            showResult({
+
+                city:{
+                    name:locationName
+                },
+
+                aqi:aqi
+
+            });
+
+        }
+
+    );
+
 }
 
 
