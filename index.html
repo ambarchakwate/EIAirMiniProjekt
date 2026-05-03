@@ -3,122 +3,79 @@
 <head>
 
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Air Quality</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <link rel="preconnect"
-        href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
 
-    <link rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossorigin>
-
-
-    <link href=
-"https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap"
-        rel="stylesheet">
-
-
-    <link rel="stylesheet"
-        href="style.css">
+    <link rel="stylesheet" href="style.css">
 
 </head>
 
 <body>
 
-
 <div class="layout">
 
-
     <aside class="sidebar">
-
         <h2 id="sidebarTitle"></h2>
 
-        <button id="navHome">
-    Home
-</button>
-
-<button id="navDash" onclick="goDashboard()">
-    Dashboard
-</button>
-
-<button id="navReport" onclick="goReport()">
-    Report
-</button>
-
+        <button id="navHome">Home</button>
+        <button id="navDash" onclick="goDashboard()">Dashboard</button>
+        <button id="navReport" onclick="goReport()">Report</button>
     </aside>
-
-
 
     <main class="main">
 
-
         <div class="topbar">
-
-            <button onclick="setLang('en')">
-                EN
-            </button>
-
-            <button onclick="setLang('hi')">
-                HI
-            </button>
-
-            <button onclick="setLang('mr')">
-                MR
-            </button>
-
-            <button onclick="setLang('de')">
-                DE
-            </button>
-
+            <button onclick="setLang('en')">EN</button>
+            <button onclick="setLang('hi')">HI</button>
+            <button onclick="setLang('mr')">MR</button>
+            <button onclick="setLang('de')">DE</button>
         </div>
-
-
 
         <div class="content">
 
-
             <h1 id="title"></h1>
 
-
+            <!-- ✅ CLEAN INPUT + SUGGESTIONS -->
             <div style="position:relative; width:300px; margin:auto;">
-    
-   <div style="position:relative; width:300px; margin:auto;">
-    
-    <input id="city" style="width:100%; padding:10px;">
+                
+                <input id="city" style="width:100%; padding:10px;">
 
-    <div id="suggestions"></div>
-
-</div>
-
-    <div id="suggestions" class="suggestions-box"></div>
-
-</div>
-
-
-            <div>
-
-                <button id="searchBtn"></button>
-
-                <button id="locBtn"></button>
+                <!-- ✅ ONLY ONE suggestions box -->
+                <div id="suggestions" 
+                     style="
+                        position:absolute;
+                        top:100%;
+                        left:0;
+                        right:0;
+                        background:white;
+                        border:1px solid #ccc;
+                        z-index:999;
+                        max-height:200px;
+                        overflow-y:auto;
+                     ">
+                </div>
 
             </div>
 
+            <div style="margin-top:15px;">
+                <button id="searchBtn"></button>
+                <button id="locBtn"></button>
+            </div>
 
-            <div id="result"></div>
-
+            <!-- ✅ RESULT CENTERED -->
+            <div id="result" style="margin-top:20px; text-align:center;"></div>
 
         </div>
 
     </main>
 
-
 </div>
-
 
 <script src="script.js"></script>
 
