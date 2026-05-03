@@ -368,13 +368,17 @@ function showResult(data){
 
                 ${data.aqi}
 
-                <br>
+            </div>
 
-                <span style="font-size:16px;">
+            <div style="
+                margin-top:12px;
+                margin-bottom:16px;
+                font-size:16px;
+                font-weight:600;
+                color:${level.color};
+            ">
 
-                    ${level.text}
-
-                </span>
+                ${level.text}
 
             </div>
 
@@ -389,7 +393,6 @@ function showResult(data){
     `;
 
 }
-
 /* HISTORY */
 
 function saveHistory(data){
