@@ -1,25 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
 
     <meta charset="UTF-8">
 
     <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+          content="width=device-width, initial-scale=1.0">
 
     <title>Report</title>
 
     <link rel="stylesheet"
-        href="style.css">
-
-
-    <script src=
-"https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js">
-    </script>
+          href="style.css">
 
 </head>
-
 
 <body>
 
@@ -31,18 +24,15 @@
 
         <h2 id="sidebarTitle"></h2>
 
-
         <button
             id="navHome"
             onclick="location.href='index.html'">
         </button>
 
-
         <button
             id="navDash"
             onclick="goDashboard()">
         </button>
-
 
         <button
             id="navReport"
@@ -58,21 +48,10 @@
 
         <div class="topbar">
 
-            <button onclick="setLang('en')">
-                EN
-            </button>
-
-            <button onclick="setLang('hi')">
-                HI
-            </button>
-
-            <button onclick="setLang('mr')">
-                MR
-            </button>
-
-            <button onclick="setLang('de')">
-                DE
-            </button>
+            <button onclick="setLang('en')">EN</button>
+            <button onclick="setLang('hi')">HI</button>
+            <button onclick="setLang('mr')">MR</button>
+            <button onclick="setLang('de')">DE</button>
 
         </div>
 
@@ -82,11 +61,8 @@
 
             <h1 id="title"></h1>
 
-
-            <div
-                id="report">
+            <div id="report">
             </div>
-
 
             <button
                 class="download-btn"
@@ -95,35 +71,12 @@
 
         </div>
 
-
     </main>
-
 
 </div>
 
 
-
 <script src="script.js"></script>
-
-
-<script>
-
-document.addEventListener(
-
-    "DOMContentLoaded",
-
-    ()=>{
-
-        applyLang();
-
-        renderReport();
-
-    }
-
-);
-
-</script>
-
 
 </body>
 </html>
