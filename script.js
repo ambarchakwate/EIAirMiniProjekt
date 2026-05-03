@@ -61,8 +61,16 @@ const text = {
     }
 };
 
-/* ---------- REAL AQI ---------- */
+
+function byId(id){
+    return document.getElementById(id);
+}
+
+
+/* REAL AQI */
+
 function calculateAQI(pm25){
+
     let aqi = 0;
 
     if(pm25 <= 12) aqi = (pm25 / 12) * 50;
@@ -74,305 +82,614 @@ function calculateAQI(pm25){
     return Math.round(aqi);
 }
 
-function byId(id){
-    return document.getElementById(id);
-}
 
-/* ---------- LANGUAGE ---------- */
+/* LANGUAGE */
+
 function setLang(l){
+
     lang = l;
-    localStorage.setItem("lang", l);
+
+    localStorage.setItem(
+        "lang",
+        l
+    );
 
     applyLang();
 
-    // ✅ force refresh dynamic content
-    if(byId("chart")){
+    if(byId("chart"))
         renderDashboard();
-    }
 
-    if(byId("report")){
+    if(byId("report"))
         renderReport();
+
+    const stored =
+    localStorage.getItem(
+        "latestAQI"
+    );
+
+    if(
+        stored &&
+        byId("result")
+    ){
+        showResult(
+            JSON.parse(stored)
+        );
     }
 
-    // ✅ also refresh result card (home page)
-    const stored = localStorage.getItem("latestAQI");
-    if(stored && byId("result")){
-        showResult(JSON.parse(stored));
-    }
 }
+
 
 function applyLang(){
+
     const t = text[lang];
 
-    if(byId("sidebarTitle")) byId("sidebarTitle").innerText = t.sidebarTitle;
-    if(byId("title")) byId("title").innerText = t.title;
-    if(byId("navHome")) byId("navHome").innerText = t.home;
-    if(byId("navDash")) byId("navDash").innerText = t.dashboard;
-    if(byId("navReport")) byId("navReport").innerText = t.report;
-    if(byId("city")) byId("city").placeholder = t.city;
-    if(byId("searchBtn")) byId("searchBtn").innerText = t.search;
-    if(byId("locBtn")) byId("locBtn").innerText = t.location;
+    if(byId("sidebarTitle"))
+        byId("sidebarTitle").innerText =
+        t.sidebarTitle;
 
-    const downloadBtn = document.querySelector(".download-btn");
-    if(downloadBtn) downloadBtn.innerText = t.download;
+    if(byId("title"))
+        byId("title").innerText =
+        t.title;
+
+    if(byId("navHome"))
+        byId("navHome").innerText =
+        t.home;
+
+    if(byId("navDash"))
+        byId("navDash").innerText =
+        t.dashboard;
+
+    if(byId("navReport"))
+        byId("navReport").innerText =
+        t.report;
+
+    if(byId("city"))
+        byId("city").placeholder =
+        t.city;
+
+    if(byId("searchBtn"))
+        byId("searchBtn").innerText =
+        t.search;
+
+    if(byId("locBtn"))
+        byId("locBtn").innerText =
+        t.location;
+
 }
 
-/* ---------- SEARCH ---------- */
+
+/* SEARCH */
+
 async function searchCity(){
 
-    const city = byId("city").value.trim();
-    if(!city) return alert("Enter a city");
+    const city =
+    byId("city")
+    .value
+    .trim();
+
+    if(!city) return;
 
     try{
-        const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}`);
-        const geoData = await geo.json();
 
-        if(!geoData.results || geoData.results.length === 0){
-            return showResult({city:{name:city},aqi:Math.floor(Math.random()*150)});
+        const geo =
+        await fetch(
+
+`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}`
+
+        );
+
+        const geoData =
+        await geo.json();
+
+        if(
+            !geoData.results ||
+            !geoData.results.length
+        ){
+            alert("City not found");
+            return;
         }
 
-        const lat = geoData.results[0].latitude;
-        const lon = geoData.results[0].longitude;
+        const place =
+        geoData.results[0];
 
-        const aq = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5`);
-        const aqData = await aq.json();
+        const aq =
+        await fetch(
 
-        let pm25 = Math.random()*50;
+`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${place.latitude}&longitude=${place.longitude}&hourly=pm2_5`
 
-        if(aqData?.hourly?.pm2_5){
-            pm25 = aqData.hourly.pm2_5[0];
+        );
+
+        const aqData =
+        await aq.json();
+
+        if(
+            !aqData.hourly ||
+            !aqData.hourly.pm2_5
+        ){
+            alert("AQI unavailable");
+            return;
         }
-
-        const place = geoData.results[0];
 
         const fullName = [
+
             place.name,
             place.admin1,
             place.country
-        ].filter(Boolean).join(", ");
+
+        ]
+        .filter(Boolean)
+        .join(", ");
 
         showResult({
-            city:{name: fullName},
-            aqi: calculateAQI(pm25)
+
+            city:{
+                name:fullName
+            },
+
+            aqi:
+            calculateAQI(
+                aqData.hourly.pm2_5[0]
+            )
+
         });
 
-    }catch(e){
-        showResult({city:{name:city},aqi:Math.floor(Math.random()*150)});
     }
+
+    catch(e){
+
+        alert("Search failed");
+
+    }
+
 }
 
-/* ---------- LOCATION ---------- */
+
+/* LOCATION */
+
 function getLocation(){
 
-    navigator.geolocation.getCurrentPosition(async pos=>{
+    navigator.geolocation.getCurrentPosition(
 
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
+        async pos=>{
 
-        let cityName = "Your Location";
+            const lat =
+            pos.coords.latitude;
 
-        try{
-            const res = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
-            );
+            const lon =
+            pos.coords.longitude;
 
-            const data = await res.json();
+            let cityName =
+            "Your Location";
 
-            if(data?.address){
-                const a = data.address;
+            try{
 
-                const city = a.city || a.town || a.village || a.suburb || "";
-                const state = a.state || "";
-                const country = a.country || "";
+                const aq =
+                await fetch(
 
-                cityName = [city,state,country].filter(Boolean).join(", ");
+`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5`
+
+                );
+
+                const aqData =
+                await aq.json();
+
+                showResult({
+
+                    city:{
+                        name:cityName
+                    },
+
+                    aqi:
+                    calculateAQI(
+                        aqData.hourly.pm2_5[0]
+                    )
+
+                });
+
             }
 
-        }catch(e){}
+            catch(e){
 
-        let aqi = Math.floor(Math.random()*150);
+                alert(
+                    "AQI unavailable"
+                );
 
-        try{
-            const aq = await fetch(
-              `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5`
-            );
-
-            const aqData = await aq.json();
-
-            if(aqData?.hourly?.pm2_5){
-                aqi = calculateAQI(aqData.hourly.pm2_5[0]);
             }
 
-        }catch(e){}
+        }
 
-        showResult({
-            city:{name: cityName},
-            aqi: aqi
-        });
+    );
 
-    }, ()=> alert("Location blocked"));
 }
 
-/* ---------- AQI COLOR ---------- */
+
+/* COLORS */
+
 function getAQILevel(aqi){
 
-    if(aqi <= 50) return {text:"Good", color:"#2ecc71"};
-    if(aqi <= 100) return {text:"Moderate", color:"#f1c40f"};
-    if(aqi <= 150) return {text:"Unhealthy", color:"#e67e22"};
-    if(aqi <= 200) return {text:"Very Unhealthy", color:"#e74c3c"};
-    
-    return {text:"Hazardous", color:"#8e44ad"};
+    if(aqi <= 50)
+        return {
+            text:"Good",
+            color:"#2ecc71"
+        };
+
+    if(aqi <= 100)
+        return {
+            text:"Moderate",
+            color:"#f1c40f"
+        };
+
+    if(aqi <= 150)
+        return {
+            text:"Unhealthy",
+            color:"#e67e22"
+        };
+
+    if(aqi <= 200)
+        return {
+            text:"Very Unhealthy",
+            color:"#e74c3c"
+        };
+
+    return {
+        text:"Hazardous",
+        color:"#8e44ad"
+    };
+
 }
 
-/* ---------- SHOW ---------- */
+
+/* RESULT */
+
 function showResult(data){
 
-    if(!data || !data.city) return alert("No data");
+    localStorage.setItem(
+        "latestAQI",
+        JSON.stringify(data)
+    );
 
-    localStorage.setItem("latestAQI", JSON.stringify(data));
     saveHistory(data);
 
-    const t = text[lang];
-    const level = getAQILevel(data.aqi);
+    const level =
+    getAQILevel(
+        data.aqi
+    );
 
     byId("result").innerHTML = `
-        <div class="card" style="background:${level.color}; color:white;">
-            <h2>${data.city.name}</h2>
-            <div class="aqi">${data.aqi}</div>
-            <div style="font-size:18px; margin-bottom:10px;">
-                ${level.text}
+
+        <div class="card"
+             style="background-color:${level.color}; color:white;">
+
+            <h2>
+                ${data.city.name}
+            </h2>
+
+            <div class="aqi">
+                ${data.aqi}
             </div>
-            <button onclick="goDashboard()">${t.openDashboard}</button>
+
+            <div style="font-size:18px;margin-bottom:10px;">
+
+                ${level.text}
+
+            </div>
+
+            <button onclick="goDashboard()">
+
+                ${text[lang].openDashboard}
+
+            </button>
+
         </div>
+
     `;
+
 }
 
-/* ---------- HISTORY ---------- */
+
+/* HISTORY */
+
 function saveHistory(data){
 
-    let history = JSON.parse(localStorage.getItem("aqiHistory")) || [];
+    let history =
+    JSON.parse(
+
+        localStorage.getItem(
+            "aqiHistory"
+        )
+
+    ) || [];
+
 
     history.push({
-        date: new Date().toLocaleDateString(),
-        aqi: data.aqi
+
+        date:
+        new Date()
+        .toLocaleDateString(),
+
+        aqi:
+        data.aqi
+
     });
 
-    history = history.slice(-7);
-    localStorage.setItem("aqiHistory", JSON.stringify(history));
+
+    history =
+    history.slice(-7);
+
+
+    localStorage.setItem(
+
+        "aqiHistory",
+
+        JSON.stringify(history)
+
+    );
+
 }
 
-/* ---------- DASHBOARD ---------- */
-let chartInstance = null;
+
+/* DASHBOARD */
+
+let chartInstance =
+null;
+
 
 function renderDashboard(){
 
-    const history = JSON.parse(localStorage.getItem("aqiHistory")) || [];
-    const t = text[lang];
+    const history =
+    JSON.parse(
 
-    // ✅ destroy old chart (IMPORTANT)
-    if(chartInstance){
+        localStorage.getItem(
+            "aqiHistory"
+        )
+
+    ) || [];
+
+
+    if(chartInstance)
         chartInstance.destroy();
-    }
 
-    chartInstance = new Chart(byId("chart"), {
-        type:"line",
-        data:{
-            labels: history.map(x=>x.date),
-            datasets:[{
-                label: t.graph,
-                data: history.map(x=>x.aqi)
-            }]
+
+    chartInstance =
+    new Chart(
+
+        byId("chart"),
+
+        {
+
+            type:"line",
+
+            data:{
+
+                labels:
+                history.map(
+                    x=>x.date
+                ),
+
+                datasets:[{
+
+                    label:
+                    text[lang].graph,
+
+                    data:
+                    history.map(
+                        x=>x.aqi
+                    )
+
+                }]
+
+            }
+
         }
-    });
+
+    );
+
 }
 
-/* ---------- REPORT ---------- */
+
+/* REPORT */
+
 function renderReport(){
 
-    const data = JSON.parse(localStorage.getItem("latestAQI"));
+    const data =
+    JSON.parse(
+
+        localStorage.getItem(
+            "latestAQI"
+        )
+
+    );
+
+
     if(!data) return;
 
+
     byId("report").innerHTML = `
+
         <div class="card">
-            <h2>${data.city.name}</h2>
-            ${text[lang].aqi}: ${data.aqi}
+
+            <h2>
+                ${data.city.name}
+            </h2>
+
+            ${text[lang].aqi}:
+            ${data.aqi}
+
         </div>
+
     `;
+
 }
 
-/* ---------- FIXED SUGGESTIONS ---------- */
+
+/* SUGGESTIONS */
+
 async function fetchSuggestions(query){
 
-    const box = byId("suggestions");
+    const box =
+    byId("suggestions");
+
     if(!box) return;
 
     if(query.length < 2){
+
         box.innerHTML = "";
         return;
+
     }
 
     try{
-        const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5`
+
+        const res =
+        await fetch(
+
+`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5`
+
         );
 
-        const data = await res.json();
+        const data =
+        await res.json();
 
         box.innerHTML = "";
 
-        data.forEach(place => {
+        if(!data.results)
+            return;
 
-            const div = document.createElement("div");
-            div.className = "suggestion-item";
-            div.innerText = place.display_name;
+        data.results.forEach(
+            place=>{
 
-            div.onclick = ()=>{
-                byId("city").value = place.display_name;
-                box.innerHTML = "";
-            };
+                const div =
+                document.createElement(
+                    "div"
+                );
 
-            box.appendChild(div);
-        });
+                div.className =
+                "suggestion-item";
 
-    }catch(e){
-        console.log("Suggestion fetch failed");
+                div.innerText = [
+
+                    place.name,
+                    place.admin1,
+                    place.country
+
+                ]
+                .filter(Boolean)
+                .join(", ");
+
+
+                div.onclick =
+                ()=>{
+
+                    byId("city")
+                    .value =
+                    place.name;
+
+                    box.innerHTML =
+                    "";
+
+                };
+
+                box.appendChild(
+                    div
+                );
+
+            }
+        );
+
     }
+
+    catch(e){
+
+        console.log(
+            "Suggestion failed"
+        );
+
+    }
+
 }
 
-/* ---------- NAV ---------- */
-function goDashboard(){ location.href="dashboard.html"; }
-function goReport(){ location.href="report.html"; }
 
-/* ---------- INIT ---------- */
-document.addEventListener("DOMContentLoaded", ()=>{
+/* NAV */
 
-    applyLang();
+function goDashboard(){
+    location.href =
+    "dashboard.html";
+}
 
-    if(byId("searchBtn")) byId("searchBtn").onclick = searchCity;
-    if(byId("locBtn")) byId("locBtn").onclick = getLocation;
 
-    if(byId("city")){
+function goReport(){
+    location.href =
+    "report.html";
+}
 
-        byId("city").addEventListener("input", e=>{
-            fetchSuggestions(e.target.value || "");
-        });
 
-        byId("city").addEventListener("keypress", e=>{
-            if(e.key==="Enter"){
-                const box = byId("suggestions");
-                if(box) box.innerHTML = "";
-                searchCity();
-            }
-        });
+/* INIT */
+
+document.addEventListener(
+
+    "DOMContentLoaded",
+
+    ()=>{
+
+        applyLang();
+
+        if(byId("searchBtn"))
+            byId("searchBtn")
+            .onclick =
+            searchCity;
+
+        if(byId("locBtn"))
+            byId("locBtn")
+            .onclick =
+            getLocation;
+
+        if(byId("city")){
+
+            byId("city")
+            .addEventListener(
+
+                "input",
+
+                e=>{
+
+                    fetchSuggestions(
+                        e.target.value
+                    );
+
+                }
+
+            );
+
+
+            byId("city")
+            .addEventListener(
+
+                "keypress",
+
+                e=>{
+
+                    if(
+                        e.key==="Enter"
+                    ){
+
+                        searchCity();
+
+                    }
+
+                }
+
+            );
+
+        }
+
+
+        if(byId("chart"))
+            renderDashboard();
+
+
+        if(byId("report"))
+            renderReport();
+
     }
 
-    // FIX LANGUAGE ON PAGE LOAD
-    if(byId("chart")){
-        renderDashboard();
-    }
-
-    if(byId("report")){
-        renderReport();
-    }
-
-});
+);
