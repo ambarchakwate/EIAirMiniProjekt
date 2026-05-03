@@ -1,3 +1,6 @@
+const TOKEN = "10125e979cb5b6f41288d714e1a6a7552ba92b76";
+
+
 let lang =
 localStorage.getItem("lang") || "en";
 
@@ -22,6 +25,7 @@ const text = {
         aqi:"AQI"
     },
 
+
     hi:{
         temp:"तापमान",
         humidity:"नमी",
@@ -40,6 +44,7 @@ const text = {
         aqi:"AQI"
     },
 
+
     mr:{
         temp:"तापमान",
         humidity:"आर्द्रता",
@@ -57,6 +62,7 @@ const text = {
         graph:"AQI ग्राफ",
         aqi:"AQI"
     },
+
 
     de:{
         temp:"Temperatur",
@@ -88,9 +94,40 @@ function byId(id){
 
 
 
-function getLabel(key){
+function calculateAQI(pm25){
 
-    return text[lang][key];
+    let aqi = 0;
+
+
+    if(pm25 <= 12)
+        aqi = (pm25 / 12) * 50;
+
+
+    else if(pm25 <= 35)
+        aqi =
+        ((pm25 - 12) / 23)
+        * 50 + 50;
+
+
+    else if(pm25 <= 55)
+        aqi =
+        ((pm25 - 35) / 20)
+        * 50 + 100;
+
+
+    else if(pm25 <= 150)
+        aqi =
+        ((pm25 - 55) / 95)
+        * 50 + 150;
+
+
+    else
+        aqi =
+        ((pm25 - 150) / 100)
+        * 100 + 200;
+
+
+    return Math.round(aqi);
 
 }
 
@@ -100,10 +137,12 @@ function setLang(l){
 
     lang = l;
 
+
     localStorage.setItem(
         "lang",
         l
     );
+
 
     location.reload();
 
@@ -117,56 +156,72 @@ function applyLang(){
     text[lang];
 
 
+
     if(byId("sidebarTitle"))
-        byId("sidebarTitle").innerText =
+        byId("sidebarTitle")
+        .innerText =
         t.sidebarTitle;
 
 
+
     if(byId("title"))
-        byId("title").innerText =
+        byId("title")
+        .innerText =
         t.title;
 
 
+
+    if(byId("navHome"))
+        byId("navHome")
+        .innerText =
+        t.home;
+
+
+
+    if(byId("navDash"))
+        byId("navDash")
+        .innerText =
+        t.dashboard;
+
+
+
+    if(byId("navReport"))
+        byId("navReport")
+        .innerText =
+        t.report;
+
+
+
     if(byId("city"))
-        byId("city").placeholder =
+        byId("city")
+        .placeholder =
         t.city;
 
 
+
     if(byId("searchBtn"))
-        byId("searchBtn").innerText =
+        byId("searchBtn")
+        .innerText =
         t.search;
 
 
+
     if(byId("locBtn"))
-        byId("locBtn").innerText =
+        byId("locBtn")
+        .innerText =
         t.location;
 
-}
 
 
-
-function calculateAQI(pm25){
-
-    return Math.round(
-        pm25 * 4
+    const downloadBtn =
+    document.querySelector(
+        ".download-btn"
     );
 
-}
 
-
-
-function getAQIClass(aqi){
-
-    if(aqi <= 50)
-        return "good";
-
-    if(aqi <= 100)
-        return "moderate";
-
-    if(aqi <= 150)
-        return "unhealthy";
-
-    return "hazardous";
+    if(downloadBtn)
+        downloadBtn.innerText =
+        t.download;
 
 }
 
@@ -198,7 +253,8 @@ async function searchCity(){
 
 
     if(
-        !geoData.results
+        !geoData.results ||
+        !geoData.results.length
     ){
 
         alert("City not found");
@@ -211,22 +267,54 @@ async function searchCity(){
     geoData.results[0];
 
 
-    loadData(
+    const lat =
+    place.latitude;
 
-        place.latitude,
-        place.longitude,
 
-        [
+    const lon =
+    place.longitude;
 
-            place.name,
-            place.admin1,
-            place.country
 
-        ]
-        .filter(Boolean)
-        .join(", ")
+    const aq =
+    await fetch(
+
+`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5`
 
     );
+
+
+    const aqData =
+    await aq.json();
+
+
+    const pm25 =
+    aqData.hourly.pm2_5[0];
+
+
+    const aqi =
+    calculateAQI(pm25);
+
+
+    const fullName = [
+
+        place.name,
+        place.admin1,
+        place.country
+
+    ]
+    .filter(Boolean)
+    .join(", ");
+
+
+    showResult({
+
+        city:{
+            name:fullName
+        },
+
+        aqi:aqi
+
+    });
 
 }
 
@@ -238,83 +326,90 @@ function getLocation(){
 
     navigator.geolocation.getCurrentPosition(
 
-        pos=>{
+        async pos=>{
 
-            loadData(
+            const lat =
+            pos.coords.latitude;
 
-                pos.coords.latitude,
-                pos.coords.longitude,
 
-                "Current Location"
+            const lon =
+            pos.coords.longitude;
+
+
+            let locationName =
+            "Current Location";
+
+
+            const geo =
+            await fetch(
+
+`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
 
             );
+
+
+            const geoData =
+            await geo.json();
+
+
+            if(
+                geoData.address
+            ){
+
+                const a =
+                geoData.address;
+
+
+                locationName = [
+
+                    a.city ||
+                    a.town ||
+                    a.village,
+
+                    a.state,
+
+                    a.country
+
+                ]
+                .filter(Boolean)
+                .join(", ");
+
+            }
+
+
+            const aq =
+            await fetch(
+
+`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5`
+
+            );
+
+
+            const aqData =
+            await aq.json();
+
+
+            const pm25 =
+            aqData.hourly.pm2_5[0];
+
+
+            const aqi =
+            calculateAQI(pm25);
+
+
+            showResult({
+
+                city:{
+                    name:locationName
+                },
+
+                aqi:aqi
+
+            });
 
         }
 
     );
-
-}
-
-
-
-/* MAIN DATA */
-
-async function loadData(
-    lat,
-    lon,
-    cityName
-){
-
-    const aqiRes =
-    await fetch(
-
-`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5`
-
-    );
-
-
-    const weatherRes =
-    await fetch(
-
-`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m`
-
-    );
-
-
-    const aqiData =
-    await aqiRes.json();
-
-
-    const weatherData =
-    await weatherRes.json();
-
-
-    const pm25 =
-    aqiData.hourly.pm2_5[0];
-
-
-    const aqi =
-    calculateAQI(pm25);
-
-
-    showResult({
-
-        city:{
-            name:cityName
-        },
-
-        aqi:aqi,
-
-        temp:
-        weatherData.current.temperature_2m,
-
-        humidity:
-        weatherData.current.relative_humidity_2m,
-
-        wind:
-        weatherData.current.wind_speed_10m
-
-    });
 
 }
 
@@ -330,54 +425,247 @@ function showResult(data){
     );
 
 
-    const colorClass =
-    getAQIClass(
-        data.aqi
-    );
+    saveHistory(data);
 
 
-    byId("resultCard")
+    byId("result")
     .innerHTML = `
 
-        <div class="aqiWeatherCard ${colorClass}">
+        <div class="card">
 
-            <h2>${data.city.name}</h2>
+            <h2>
+                ${data.city.name}
+            </h2>
 
-            <h1>AQI ${data.aqi}</h1>
-
-            <div class="weatherGrid">
-
-                <div>
-                    ${getLabel("temp")}
-                    <br>
-                    ${data.temp}°C
-                </div>
-
-                <div>
-                    ${getLabel("humidity")}
-                    <br>
-                    ${data.humidity}%
-                </div>
-
-                <div>
-                    ${getLabel("wind")}
-                    <br>
-                    ${data.wind}
-                </div>
-
+            <div class="aqi">
+                ${data.aqi}
             </div>
 
             <button onclick="goDashboard()">
 
-                ${getLabel(
-                    "openDashboard"
-                )}
+                ${text[lang]
+                .openDashboard}
 
             </button>
 
         </div>
 
     `;
+
+}
+
+
+
+/* HISTORY */
+
+function saveHistory(data){
+
+    let history =
+
+        JSON.parse(
+
+            localStorage.getItem(
+                "aqiHistory"
+            )
+
+        ) || [];
+
+
+    history.push({
+
+        date:
+        new Date()
+        .toLocaleDateString(),
+
+        aqi:
+        data.aqi
+
+    });
+
+
+    history =
+    history.slice(-7);
+
+
+    localStorage.setItem(
+
+        "aqiHistory",
+
+        JSON.stringify(history)
+
+    );
+
+}
+
+
+
+/* DASHBOARD */
+
+function renderDashboard(){
+
+    if(!byId("chart"))
+        return;
+
+
+    const history =
+
+        JSON.parse(
+
+            localStorage.getItem(
+                "aqiHistory"
+            )
+
+        ) || [];
+
+
+    new Chart(
+
+        byId("chart"),
+
+        {
+
+            type:"line",
+
+            data:{
+
+                labels:
+                history.map(
+                    x=>x.date
+                ),
+
+
+                datasets:[{
+
+                    label:
+                    text[lang]
+                    .graph,
+
+
+                    data:
+                    history.map(
+                        x=>x.aqi
+                    )
+
+                }]
+
+            }
+
+        }
+
+    );
+
+}
+
+
+
+/* REPORT */
+
+function renderReport(){
+
+    if(!byId("report"))
+        return;
+
+
+    const data =
+
+        JSON.parse(
+
+            localStorage.getItem(
+                "latestAQI"
+            )
+
+        );
+
+
+    if(!data)
+        return;
+
+
+    byId("report")
+    .innerHTML = `
+
+        <div class="card">
+
+            <h2>
+                ${data.city.name}
+            </h2>
+
+            ${text[lang].aqi}:
+            ${data.aqi}
+
+        </div>
+
+    `;
+
+}
+
+
+
+/* DOWNLOAD */
+
+function downloadReport(){
+
+    const data =
+
+        JSON.parse(
+
+            localStorage.getItem(
+                "latestAQI"
+            )
+
+        );
+
+
+    if(!data)
+        return;
+
+
+    const report = `
+
+AIR QUALITY REPORT
+
+Location:
+${data.city.name}
+
+AQI:
+${data.aqi}
+
+Generated:
+${new Date()
+.toLocaleString()}
+
+    `;
+
+
+    const blob =
+    new Blob(
+
+        [report],
+
+        {
+            type:"text/plain"
+        }
+
+    );
+
+
+    const link =
+    document.createElement(
+        "a"
+    );
+
+
+    link.href =
+    URL.createObjectURL(
+        blob
+    );
+
+
+    link.download =
+    "aqi-report.txt";
+
+
+    link.click();
 
 }
 
@@ -392,6 +680,7 @@ async function fetchSuggestions(query){
 
 
     if(
+        !box ||
         query.length < 2
     ){
 
@@ -404,7 +693,7 @@ async function fetchSuggestions(query){
     const res =
     await fetch(
 
-`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5`
+`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5`
 
     );
 
@@ -416,70 +705,62 @@ async function fetchSuggestions(query){
     box.innerHTML = "";
 
 
-    if(
-        !data.results
-    ) return;
+    data.forEach(place=>{
+
+        const div =
+        document.createElement(
+            "div"
+        );
 
 
-    data.results.forEach(
-
-        place=>{
-
-            const div =
-            document.createElement(
-                "div"
-            );
+        div.className =
+        "suggestion-item";
 
 
-            div.className =
-            "suggestion-item";
+        div.innerText =
+        place.display_name;
 
 
-            div.innerText = [
+        div.onclick =
+        ()=>{
 
-                place.name,
-                place.admin1,
-                place.country
-
-            ]
-            .filter(Boolean)
-            .join(", ");
+            byId("city")
+            .value =
+            place.display_name;
 
 
-            div.onclick =
-            ()=>{
+            box.innerHTML =
+            "";
 
-                byId("city")
-                .value =
-                place.name;
+        };
 
 
-                box.innerHTML =
-                "";
+        box.appendChild(
+            div
+        );
 
-            };
-
-
-            box.appendChild(
-                div
-            );
-
-        }
-
-    );
+    });
 
 }
 
 
+
+/* NAV */
 
 function goDashboard(){
-
     location.href =
     "dashboard.html";
-
 }
 
 
+function goReport(){
+    location.href =
+    "report.html";
+}
+
+
+
+/* INIT */
 
 document.addEventListener(
 
@@ -491,12 +772,14 @@ document.addEventListener(
 
 
         if(byId("searchBtn"))
-            byId("searchBtn").onclick =
+            byId("searchBtn")
+            .onclick =
             searchCity;
 
 
         if(byId("locBtn"))
-            byId("locBtn").onclick =
+            byId("locBtn")
+            .onclick =
             getLocation;
 
 
@@ -538,6 +821,14 @@ document.addEventListener(
             );
 
         }
+
+
+        if(byId("chart"))
+            renderDashboard();
+
+
+        if(byId("report"))
+            renderReport();
 
     }
 
