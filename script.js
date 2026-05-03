@@ -61,7 +61,7 @@ const text = {
     }
 };
 
-/* ---------- REAL AQI ---------- */
+/* ---------- AQI ---------- */
 function calculateAQI(pm25){
     let aqi = 0;
 
@@ -85,16 +85,9 @@ function setLang(l){
 
     applyLang();
 
-    // ✅ force refresh dynamic content
-    if(byId("chart")){
-        renderDashboard();
-    }
+    if(byId("chart")) renderDashboard();
+    if(byId("report")) renderReport();
 
-    if(byId("report")){
-        renderReport();
-    }
-
-    // ✅ also refresh result card (home page)
     const stored = localStorage.getItem("latestAQI");
     if(stored && byId("result")){
         showResult(JSON.parse(stored));
@@ -173,7 +166,8 @@ function getLocation(){
 
         try{
             const res = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+                `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+                { headers: { "Accept": "application/json" } }
             );
 
             const data = await res.json();
@@ -236,7 +230,7 @@ function showResult(data){
     const level = getAQILevel(data.aqi);
 
     byId("result").innerHTML = `
-        <div class="card" style="background:${level.color}; color:white;">
+        <div class="card" style="background:${level.color} !important; color:white !important;">
             <h2>${data.city.name}</h2>
             <div class="aqi">${data.aqi}</div>
             <div style="font-size:18px; margin-bottom:10px;">
@@ -269,7 +263,6 @@ function renderDashboard(){
     const history = JSON.parse(localStorage.getItem("aqiHistory")) || [];
     const t = text[lang];
 
-    // ✅ destroy old chart (IMPORTANT)
     if(chartInstance){
         chartInstance.destroy();
     }
@@ -300,7 +293,9 @@ function renderReport(){
     `;
 }
 
-/* ---------- FIXED SUGGESTIONS ---------- */
+/* ---------- SUGGESTIONS FIXED FOR GITHUB ---------- */
+let suggestionTimeout;
+
 async function fetchSuggestions(query){
 
     const box = byId("suggestions");
@@ -313,7 +308,12 @@ async function fetchSuggestions(query){
 
     try{
         const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5`
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5`,
+            {
+                headers:{
+                    "Accept":"application/json"
+                }
+            }
         );
 
         const data = await res.json();
@@ -354,7 +354,13 @@ document.addEventListener("DOMContentLoaded", ()=>{
     if(byId("city")){
 
         byId("city").addEventListener("input", e=>{
-            fetchSuggestions(e.target.value || "");
+
+            clearTimeout(suggestionTimeout);
+
+            suggestionTimeout = setTimeout(()=>{
+                fetchSuggestions(e.target.value || "");
+            }, 400);
+
         });
 
         byId("city").addEventListener("keypress", e=>{
@@ -366,13 +372,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
         });
     }
 
-    // FIX LANGUAGE ON PAGE LOAD
-    if(byId("chart")){
-        renderDashboard();
-    }
-
-    if(byId("report")){
-        renderReport();
-    }
+    if(byId("chart")) renderDashboard();
+    if(byId("report")) renderReport();
 
 });
