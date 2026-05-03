@@ -105,3 +105,33 @@ canvas{
 .suggestion-item:hover{
     background:#eee;
 }
+
+.aqi-status{
+    font-size:18px;
+    margin-bottom:10px;
+}
+
+.card.aqi-good{
+    background:#2ecc71;
+    color:white;
+}
+
+.card.aqi-moderate{
+    background:#f1c40f;
+    color:white;
+}
+
+.card.aqi-unhealthy{
+    background:#e67e22;
+    color:white;
+}
+
+.card.aqi-very-unhealthy{
+    background:#e74c3c;
+    color:white;
+}
+
+.card.aqi-hazardous{
+    background:#8e44ad;
+    color:white;
+}
