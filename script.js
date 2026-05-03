@@ -103,12 +103,10 @@ function setLang(l){
 
     lang = l;
 
-
     localStorage.setItem(
         "lang",
         l
     );
-
 
     location.reload();
 
@@ -186,38 +184,53 @@ function applyLang(){
 
 function calculateAQI(pm25){
 
-    let aqi = 0;
-
-
     if(pm25 <= 12)
-        aqi = (pm25 / 12) * 50;
+        return Math.round(
+            (pm25 / 12) * 50
+        );
 
 
-    else if(pm25 <= 35)
-        aqi =
-        ((pm25 - 12) / 23)
-        * 50 + 50;
+    if(pm25 <= 35)
+        return Math.round(
+            ((pm25-12)/23)*50+50
+        );
 
 
-    else if(pm25 <= 55)
-        aqi =
-        ((pm25 - 35) / 20)
-        * 50 + 100;
+    if(pm25 <= 55)
+        return Math.round(
+            ((pm25-35)/20)*50+100
+        );
 
 
-    else if(pm25 <= 150)
-        aqi =
-        ((pm25 - 55) / 95)
-        * 50 + 150;
+    if(pm25 <= 150)
+        return Math.round(
+            ((pm25-55)/95)*50+150
+        );
 
 
-    else
-        aqi =
-        ((pm25 - 150) / 100)
-        * 100 + 200;
+    return Math.round(
+        ((pm25-150)/100)*100+200
+    );
+
+}
 
 
-    return Math.round(aqi);
+
+function getAQIClass(aqi){
+
+    if(aqi <= 50)
+        return "good";
+
+
+    if(aqi <= 100)
+        return "moderate";
+
+
+    if(aqi <= 150)
+        return "unhealthy";
+
+
+    return "hazardous";
 
 }
 
@@ -249,8 +262,7 @@ async function searchCity(){
 
 
     if(
-        !geoData.results ||
-        !geoData.results.length
+        !geoData.results
     ){
 
         alert("City not found");
@@ -309,7 +321,7 @@ function getLocation(){
 
 
 
-/* LOAD AQI */
+/* AQI LOAD */
 
 async function loadAQI(
     lat,
@@ -337,31 +349,22 @@ async function loadAQI(
     calculateAQI(pm25);
 
 
-    const temp =
-    data.hourly.temperature_2m[0];
-
-
-    const humidity =
-    data.hourly.relative_humidity_2m[0];
-
-
-    const wind =
-    data.hourly.windspeed_10m[0];
-
-
     showResult({
 
         city:{
             name:cityName
         },
 
-        aqi,
+        aqi:aqi,
 
-        temp,
+        temp:
+        data.hourly.temperature_2m[0],
 
-        humidity,
+        humidity:
+        data.hourly.relative_humidity_2m[0],
 
-        wind
+        wind:
+        data.hourly.windspeed_10m[0]
 
     });
 
@@ -382,60 +385,57 @@ function showResult(data){
     saveHistory(data);
 
 
+    const colorClass =
+    getAQIClass(
+        data.aqi
+    );
+
+
     byId("result")
     .innerHTML = `
 
-        <div class="aqiWeatherCard">
+        <div class="aqiWeatherCard ${colorClass}">
 
             <h2>
                 ${data.city.name}
             </h2>
 
-            <h3>
-                AQI:
-                ${data.aqi}
-            </h3>
-
+            <h1>
+                AQI ${data.aqi}
+            </h1>
 
             <div class="weatherGrid">
 
                 <div>
 
                     ${getLabel("temp")}
-
                     <br>
 
                     ${data.temp}°C
 
                 </div>
 
-
                 <div>
 
                     ${getLabel("humidity")}
-
                     <br>
 
                     ${data.humidity}%
 
                 </div>
 
-
                 <div>
 
                     ${getLabel("wind")}
-
                     <br>
 
-                    ${data.wind} km/h
+                    ${data.wind}
 
                 </div>
 
             </div>
 
-
-            <button
-                onclick="goDashboard()">
+            <button onclick="goDashboard()">
 
                 ${getLabel(
                     "openDashboard"
@@ -459,9 +459,7 @@ async function fetchSuggestions(query){
     byId("suggestions");
 
 
-    if(
-        query.length < 2
-    ){
+    if(query.length < 2){
 
         box.innerHTML = "";
         return;
@@ -503,7 +501,9 @@ async function fetchSuggestions(query){
             "suggestion-item";
 
 
-            div.innerText = [
+            div.innerText =
+
+            [
 
                 place.name,
                 place.admin1,
@@ -617,14 +617,12 @@ function renderDashboard(){
                     x=>x.date
                 ),
 
-
                 datasets:[{
 
                     label:
                     getLabel(
                         "graph"
                     ),
-
 
                     data:
                     history.map(
@@ -705,9 +703,9 @@ function downloadReport(){
         return;
 
 
-    const report = `
+    const report =
 
-AIR QUALITY REPORT
+`AIR QUALITY REPORT
 
 Location:
 ${data.city.name}
@@ -716,10 +714,7 @@ AQI:
 ${data.aqi}
 
 Generated:
-${new Date()
-.toLocaleString()}
-
-    `;
+${new Date().toLocaleString()}`;
 
 
     const blob =
@@ -756,8 +751,6 @@ ${new Date()
 
 
 
-/* NAV */
-
 function goDashboard(){
 
     location.href =
@@ -774,8 +767,6 @@ function goReport(){
 }
 
 
-
-/* INIT */
 
 document.addEventListener(
 
