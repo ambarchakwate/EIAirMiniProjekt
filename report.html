@@ -13,11 +13,6 @@
     <link rel="stylesheet"
         href="style.css">
 
-
-    <script src=
-"https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js">
-    </script>
-
 </head>
 
 
@@ -89,9 +84,11 @@
 
 
             <button
-                class="download-btn"
-                onclick="downloadReport()">
+                type="button"
+                class="download-btn">
+
                 Download Report
+
             </button>
 
         </div>
@@ -104,26 +101,7 @@
 
 
 
-<script src="script.js"></script>
-
-
-<script>
-
-document.addEventListener(
-
-    "DOMContentLoaded",
-
-    ()=>{
-
-        applyLang();
-
-        renderReport();
-
-    }
-
-);
-
-</script>
+<script src="script.js?v=25"></script>
 
 
 </body>
