@@ -155,6 +155,16 @@ function applyLang(){
         byId("locBtn").innerText =
         t.location;
 
+    const btn =
+    document.querySelector(
+        ".download-btn"
+    );
+
+    if(btn){
+        btn.innerText =
+        t.download;
+    }
+
 }
 
 
@@ -202,14 +212,6 @@ async function searchCity(){
         const aqData =
         await aq.json();
 
-        if(
-            !aqData.hourly ||
-            !aqData.hourly.pm2_5
-        ){
-            alert("AQI unavailable");
-            return;
-        }
-
         const fullName = [
 
             place.name,
@@ -220,6 +222,11 @@ async function searchCity(){
         .filter(Boolean)
         .join(", ");
 
+        const pm25 =
+        aqData.hourly.pm2_5.find(
+            v=>v!==null
+        );
+
         showResult({
 
             city:{
@@ -227,9 +234,7 @@ async function searchCity(){
             },
 
             aqi:
-            calculateAQI(
-                aqData.hourly.pm2_5[0]
-            )
+            calculateAQI(pm25)
 
         });
 
@@ -273,6 +278,11 @@ function getLocation(){
                 const aqData =
                 await aq.json();
 
+                const pm25 =
+                aqData.hourly.pm2_5.find(
+                    v=>v!==null
+                );
+
                 showResult({
 
                     city:{
@@ -280,9 +290,7 @@ function getLocation(){
                     },
 
                     aqi:
-                    calculateAQI(
-                        aqData.hourly.pm2_5[0]
-                    )
+                    calculateAQI(pm25)
 
                 });
 
@@ -521,15 +529,16 @@ function renderReport(){
 
 }
 
+
+/* DOWNLOAD - FIXED */
+
 function downloadReport(){
 
     const data =
     JSON.parse(
-
         localStorage.getItem(
             "latestAQI"
         )
-
     );
 
 
@@ -550,87 +559,75 @@ function downloadReport(){
     );
 
 
-    const report = `
+    const report =
 
-AIR QUALITY REPORT
-==============================
+`AIR QUALITY REPORT
 
-Location:
-${data.city.name}
+Location: ${data.city.name}
 
-AQI:
-${data.aqi}
+AQI: ${data.aqi}
 
-Status:
-${level.text}
+Status: ${level.text}
 
-Generated:
-${new Date().toLocaleString()}
-
-==============================
-
-    `;
+Generated: ${new Date().toLocaleString()}
+`;
 
 
     const blob =
     new Blob(
-
         [report],
-
         {
             type:"text/plain;charset=utf-8"
         }
-
     );
 
 
     const url =
-    URL.createObjectURL(
+    window.URL
+    .createObjectURL(
         blob
     );
 
 
-    const a =
+    const link =
     document.createElement(
         "a"
     );
 
 
-    a.style.display =
-    "none";
-
-
-    a.href =
+    link.href =
     url;
 
-
-    a.download =
+    link.download =
     "aqi-report.txt";
 
+    link.style.display =
+    "none";
 
     document.body
     .appendChild(
-        a
+        link
     );
 
-
-    a.click();
-
+    link.click();
 
     setTimeout(()=>{
 
         document.body
         .removeChild(
-            a
+            link
         );
 
-        URL.revokeObjectURL(
+        window.URL
+        .revokeObjectURL(
             url
         );
 
-    },100);
+    },500);
 
 }
+
+
 /* SUGGESTIONS */
 
 async function fetchSuggestions(query){
@@ -751,6 +748,16 @@ document.addEventListener(
             byId("locBtn")
             .onclick =
             getLocation;
+
+        const dlBtn =
+        document.querySelector(
+            ".download-btn"
+        );
+
+        if(dlBtn){
+            dlBtn.onclick =
+            downloadReport;
+        }
 
         if(byId("city")){
 
