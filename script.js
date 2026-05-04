@@ -553,8 +553,7 @@ function downloadReport(){
     const report = `
 
 AIR QUALITY REPORT
-
-========================
+==============================
 
 Location:
 ${data.city.name}
@@ -566,10 +565,9 @@ Status:
 ${level.text}
 
 Generated:
-${new Date()
-.toLocaleString()}
+${new Date().toLocaleString()}
 
-========================
+==============================
 
     `;
 
@@ -580,49 +578,59 @@ ${new Date()
         [report],
 
         {
-            type:"text/plain"
+            type:"text/plain;charset=utf-8"
         }
 
     );
 
 
-    const link =
-    document.createElement(
-        "a"
-    );
-
-
-    link.href =
+    const url =
     URL.createObjectURL(
         blob
     );
 
 
-    link.download =
+    const a =
+    document.createElement(
+        "a"
+    );
+
+
+    a.style.display =
+    "none";
+
+
+    a.href =
+    url;
+
+
+    a.download =
     "aqi-report.txt";
 
 
     document.body
     .appendChild(
-        link
+        a
     );
 
 
-    link.click();
+    a.click();
 
 
-    document.body
-    .removeChild(
-        link
-    );
+    setTimeout(()=>{
 
+        document.body
+        .removeChild(
+            a
+        );
 
-    URL.revokeObjectURL(
-        link.href
-    );
+        URL.revokeObjectURL(
+            url
+        );
+
+    },100);
 
 }
-
 /* SUGGESTIONS */
 
 async function fetchSuggestions(query){
