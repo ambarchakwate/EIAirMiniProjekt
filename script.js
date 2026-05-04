@@ -521,6 +521,107 @@ function renderReport(){
 
 }
 
+function downloadReport(){
+
+    const data =
+    JSON.parse(
+
+        localStorage.getItem(
+            "latestAQI"
+        )
+
+    );
+
+
+    if(!data){
+
+        alert(
+            "Search a city first"
+        );
+
+        return;
+
+    }
+
+
+    const level =
+    getAQILevel(
+        data.aqi
+    );
+
+
+    const report = `
+
+AIR QUALITY REPORT
+
+========================
+
+Location:
+${data.city.name}
+
+AQI:
+${data.aqi}
+
+Status:
+${level.text}
+
+Generated:
+${new Date()
+.toLocaleString()}
+
+========================
+
+    `;
+
+
+    const blob =
+    new Blob(
+
+        [report],
+
+        {
+            type:"text/plain"
+        }
+
+    );
+
+
+    const link =
+    document.createElement(
+        "a"
+    );
+
+
+    link.href =
+    URL.createObjectURL(
+        blob
+    );
+
+
+    link.download =
+    "aqi-report.txt";
+
+
+    document.body
+    .appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    document.body
+    .removeChild(
+        link
+    );
+
+
+    URL.revokeObjectURL(
+        link.href
+    );
+
+}
 
 /* SUGGESTIONS */
 
